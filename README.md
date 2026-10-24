@@ -13,6 +13,19 @@ rebuilds and redeploys the site through GitHub Actions; the URLs never change.
 
 That's it. You can also re-run the build by hand from the **Actions** tab → *Build and deploy CV* → *Run workflow*.
 
+## Safety check
+
+Every build verifies its own output before deploying:
+
+- every word in the PDF must appear in `index.html`, `resume.md`, `resume.txt` and `resume.docx`;
+- `resume.json` must contain every bullet, summary line and skill;
+- the name, job title, email and Experience section must be found, and every role must have dates;
+- every published file must exist and be non-empty, and the JSON-LD must be valid.
+
+If any check fails, the workflow fails, **nothing is deployed and the live site stays as it was**.
+GitHub emails you about the failed run; the run's summary page lists exactly what was wrong.
+A passing run's summary shows what was parsed (sections, roles, word count).
+
 ## What gets published
 
 | URL | What it is |

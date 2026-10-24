@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import html
+import html.parser
 import json
 import os
 import re
@@ -196,11 +197,21 @@ def plain(rich: list[Seg]) -> str:
     return norm("".join(s.text for s in rich))
 
 
+SECTION_WORDS = re.compile(
+    r"^(profile|summary|professional summary|about( me)?|objective|(professional |work )?experience|employment"
+    r"( history)?|education|skills|technical skills|core skills|key skills|projects|certifications?|awards"
+    r"|achievements|publications|languages|interests|volunteering|references|courses|training)$", re.I)
+
+
 def is_heading(row: Row, body: float) -> bool:
     t = row.text
+    if row.bullet or row.right or len(t) > 40:
+        return False
     letters = re.sub(r"[^A-Za-z]", "", t)
-    return (len(letters) >= 3 and t.upper() == t and row.all_bold and not row.bullet
-            and not row.right and row.size >= body and len(t) < 40)
+    if len(letters) >= 3 and t.upper() == t and row.all_bold and row.size >= body:
+        return True  # "PROFESSIONAL EXPERIENCE"
+    # "Experience", "Technical Skills": a known section name set apart by weight or size
+    return bool(SECTION_WORDS.match(t.strip(" :"))) and (row.all_bold or row.size >= body * 1.15)
 
 
 def title_case(s: str) -> str:
@@ -615,7 +626,7 @@ def split_location(text: str):
 def to_json_resume(cv: dict, updated: dt.date) -> dict:
     loc = contact(cv, "location")
     city, country = split_location(loc["text"]) if loc else ("", "")
-    profiles = [{"network": k.title() if k != "github" else "GitHub", "username": c["url"].rstrip("/").rsplit("/", 1)[-1],
+    profiles = [{"network": {"github": "GitHub", "linkedin": "LinkedIn"}[k], "username": c["url"].rstrip("/").rsplit("/", 1)[-1],
                  "url": c["url"]} for k in ("github", "linkedin") if (c := contact(cv, k))]
     work = []
     for e in entries(cv, "experience"):
@@ -871,6 +882,140 @@ def make_images(pdf: Path, out: Path, crop_y: float | None = None) -> None:
                       alpha=False).save(out / "apple-touch-icon.png")
 
 
+# --------------------------------------------------------------------------
+# 5. Verification: refuse to publish if any output lost text from the PDF
+# --------------------------------------------------------------------------
+
+SKIP_TOKENS = {"", "|", "•", "●", "▪", "-", "–", "—", "·"}
+
+
+def tokens(text: str) -> list[str]:
+    out = []
+    for w in re.split(r"[\s|•●▪·/–—-]+", text.replace("\xa0", " ").lower()):
+        w = w.strip(".,;:()[]{}\"'“”‘’!?*`\\")
+        if w not in SKIP_TOKENS:
+            out.append(w)
+    return out
+
+
+class _Text(html.parser.HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.parts, self.skip = [], 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ("script", "style", "head"):
+            self.skip += 1
+        self.parts.append(" ")
+
+    def handle_endtag(self, tag):
+        if tag in ("script", "style", "head"):
+            self.skip -= 1
+        self.parts.append(" ")
+
+    def handle_data(self, data):
+        if not self.skip:
+            self.parts.append(data)
+
+
+def html_text(src: str) -> str:
+    p = _Text()
+    p.feed(src)
+    return "".join(p.parts)
+
+
+def docx_text(path: Path) -> str:
+    import zipfile
+    xml = zipfile.ZipFile(path).read("word/document.xml").decode("utf8")
+    xml = re.sub(r"</w:p>|<w:tab/>|<w:br/>", " ", xml)
+    return html.unescape(re.sub(r"<[^>]+>", "", xml))
+
+
+def verify(pdf: Path, out: Path, cv: dict, require_docx: bool) -> list[str]:
+    """Return a list of problems; an empty list means every check passed."""
+    problems, notes = [], []
+    doc = pymupdf.open(pdf)
+    source = Counter(t for page in doc for w in page.get_text("words") for t in tokens(w[4]))
+
+    outputs = {"index.html": html_text((out / "index.html").read_text()),
+               "resume.md": re.sub(r"\[([^\]]*)\]\(([^)]*)\)", r"\1 \2", (out / "resume.md").read_text()),
+               "resume.txt": (out / "resume.txt").read_text()}
+    if (out / "resume.docx").exists():
+        outputs["resume.docx"] = docx_text(out / "resume.docx")
+    elif require_docx:
+        problems.append("resume.docx was not generated")
+    for name, text in outputs.items():
+        missing = source - Counter(tokens(text))
+        if missing:
+            problems.append(f"{name} is missing text from the PDF: "
+                            + ", ".join(f"{w!r}×{n}" if n > 1 else repr(w) for w, n in missing.most_common(15)))
+
+    # JSON Resume and JSON-LD are restructured, so check they carry the content, not the layout
+    content = []
+    for sec in cv["sections"]:
+        for it in sec["items"]:
+            if it["type"] == "para":
+                content.append(plain(it["rich"]))
+            for e in [it] + it.get("roles", []):
+                content += [plain(b["rich"]) for b in e.get("bullets", [])]
+            for b in it.get("items", []):
+                content += b.get("values") or [plain(b["rich"])]
+    json_text = json.dumps(json.loads((out / "resume.json").read_text()), ensure_ascii=False)
+    lost = set(tokens(" ".join(content))) - set(tokens(json_text))
+    if lost:
+        problems.append("resume.json is missing: " + ", ".join(sorted(lost)[:15]))
+    m = re.search(r'<script type="application/ld\+json">(.*?)</script>', (out / "index.html").read_text(), re.S)
+    try:
+        ld = json.loads(m.group(1))
+        if ld["mainEntity"]["name"] != cv["name"]:
+            problems.append("JSON-LD name does not match the PDF")
+    except Exception as e:  # noqa: BLE001
+        problems.append(f"JSON-LD is not valid JSON: {e}")
+
+    # Structure: the things a recruiter or an ATS must be able to find
+    if not cv["name"] or len(cv["name"].split()) > 5:
+        problems.append(f"name looks wrong: {cv['name']!r}")
+    if not cv["title"]:
+        problems.append("job title not found under the name")
+    if not contact(cv, "email"):
+        problems.append("no email address found in the header")
+    exp = entries(cv, "experience")
+    if not exp:
+        problems.append("no Experience section with entries was found")
+    for e in exp:
+        for r in (e["roles"] or [e]):
+            if not r["start"]:
+                problems.append(f"experience entry without dates: {r['title']!r}")
+            if not r["title"]:
+                problems.append("experience entry without a title")
+    for sec in cv["sections"]:
+        for it in sec["items"]:
+            if it["type"] == "list":
+                for b in it["items"]:
+                    if not plain(b["rich"]):
+                        problems.append(f"empty bullet in {sec['title']}")
+            if it["type"] == "para" and sec["id"] in ("experience", "education"):
+                notes.append(f"unstructured line in {sec['title']}: {plain(it['rich'])[:70]!r}")
+    for f in ("index.html", "resume.pdf", "resume.md", "resume.txt", "resume.json", "llms.txt",
+              "robots.txt", "sitemap.xml", "og.png", "CNAME", vcf_name(cv)):
+        if not (out / f).exists() or (out / f).stat().st_size == 0:
+            problems.append(f"{f} is missing or empty")
+
+    words = sum(source.values())
+    report = [f"## CV build: {'❌ failed' if problems else '✅ passed'}", "",
+              f"- Source: `{pdf.name}` ({doc.page_count} page{'s' if doc.page_count > 1 else ''}, {words} words)",
+              f"- Name: **{cv['name']}** — {cv['title']}",
+              "- Sections: " + ", ".join(f"{s['title']} ({len(s['items'])})" for s in cv["sections"]),
+              f"- Experience: {sum(len(e['roles']) or 1 for e in exp)} roles at {len(exp)} organisations",
+              f"- Checked every word of the PDF is present in: {', '.join(outputs)}", ""]
+    report += [f"- ❌ {p}" for p in problems] + [f"- ⚠️ {n}" for n in notes]
+    print("\n".join(report))
+    if os.environ.get("GITHUB_STEP_SUMMARY"):
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as fh:
+            fh.write("\n".join(report) + "\n")
+    return problems
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--pdf", type=Path)
@@ -932,6 +1077,8 @@ def main() -> None:
     (out / ".nojekyll").write_text("")
     heads = [r.y for r in rows if r.page == 0 and is_heading(r, body)]
     make_images(pdf, out, heads[1] - 8 if len(heads) > 1 else None)
+    if verify(pdf, out, cv, require_docx=bool(os.environ.get("CI"))):
+        sys.exit("Verification failed: not publishing. The live site is unchanged.")
     print(f"Built {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out} from {pdf.name} "
           f"({cv['name']}, {len(cv['sections'])} sections, updated {updated})")
 
