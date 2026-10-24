@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<meta name="description" content="{{DESC}}">
+<meta name="author" content="{{NAME}}">
+<link rel="canonical" href="{{URL}}">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f7f5f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151413" media="(prefers-color-scheme: dark)">
+
+<meta property="og:type" content="profile">
+<meta property="og:site_name" content="{{NAME}} — Résumé">
+<meta property="og:title" content="{{NAME}} — {{JOB}}">
+<meta property="og:description" content="{{DESC}}">
+<meta property="og:url" content="{{URL}}">
+<meta property="og:image" content="{{SITE}}/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The top of {{NAME}}'s résumé: {{JOB}}">
+<meta property="og:locale" content="en_IN">
+<meta property="profile:first_name" content="{{FIRST}}">
+<meta property="profile:last_name" content="{{LAST}}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{NAME}} — {{JOB}}">
+<meta name="twitter:description" content="{{DESC}}">
+<meta name="twitter:image" content="{{SITE}}/og.png">
+<meta name="twitter:image:alt" content="The top of {{NAME}}'s résumé: {{JOB}}">
+
+<link rel="alternate" type="application/pdf" href="{{SITE}}/resume.pdf" title="Résumé (PDF)">
+<link rel="alternate" type="text/markdown" href="{{SITE}}/resume.md" title="Résumé (Markdown)">
+<link rel="alternate" type="text/plain" href="{{SITE}}/resume.txt" title="Résumé (plain text)">
+<link rel="alternate" type="application/json" href="{{SITE}}/resume.json" title="Résumé (JSON Resume)">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="preload" href="/fonts/crimson-pro-semibold.woff2" as="font" type="font/woff2" crossorigin>
+<script>try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>{{CSS}}</style>
+<script type="application/ld+json">{{JSONLD}}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to résumé</a>
+<header class="bar">
+  <div class="wrap bar-in">
+    <a class="mark" href="#top" aria-label="{{NAME}}, back to top"><span aria-hidden="true">{{INITIALS}}</span></a>
+    <span class="bar-name" aria-hidden="true">{{NAME}}</span>
+    <nav aria-label="Sections"><ul>{{NAV}}</ul></nav>
+    <div class="bar-actions">
+      <button class="icon-btn" id="theme" type="button" aria-label="Switch colour theme" hidden>{{I_THEME}}</button>
+      <a class="btn btn-sm" href="/resume.pdf" download="{{PDF_NAME}}">{{I_DOWNLOAD}}<span>PDF</span></a>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <header class="hero" id="top">
+    <h1>{{NAME}}</h1>
+    <p class="job">{{JOB}}</p>
+    <ul class="contacts">{{CONTACTS}}</ul>
+    <div class="actions">
+      <a class="btn" href="/resume.pdf" download="{{PDF_NAME}}">{{I_DOWNLOAD}}<span>Download PDF</span></a>
+      <button class="btn btn-ghost" id="share" type="button" hidden>{{I_SHARE}}<span>Share</span></button>
+      <a class="btn btn-ghost" href="#formats">{{I_FILE}}<span>More formats</span></a>
+    </div>
+    <p class="stamp">Updated <time datetime="{{UPDATED_ISO}}">{{UPDATED}}</time> · {{PDF_META}}</p>
+    <p class="toast" id="toast" role="status" aria-live="polite"></p>
+  </header>
+
+  {{BODY}}
+
+  <section id="formats" aria-labelledby="formats-h" class="formats">
+    <h2 id="formats-h">Download &amp; share</h2>
+    <p>The same résumé in every format. Links never change, so you can bookmark or share them.</p>
+    <ul class="fmt">
+      <li><a href="/resume.pdf" download="{{PDF_NAME}}">{{I_DOWNLOAD}}PDF<span class="ext">.pdf</span></a></li>
+      {{FORMATS}}
+    </ul>
+    <details class="pdf" id="pdf">
+      <summary>Preview the original PDF</summary>
+      <div class="pdf-box" id="pdf-box">
+        <p><a href="/resume.pdf">Open the PDF</a> in a new view.</p>
+      </div>
+    </details>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <p>For applicant tracking systems and AI assistants: <a href="/resume.txt">plain text</a>, <a href="/resume.md">Markdown</a>, <a href="/resume.json">JSON Resume</a> and <a href="/llms.txt">llms.txt</a>. Generated from the PDF on every update.</p>
+  <p>© {{NAME}}</p>
+</footer>
+<script>{{JS}}</script>
+</body>
+</html>
