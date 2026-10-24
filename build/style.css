@@ -61,6 +61,7 @@ h1{font:600 clamp(2.6rem,9vw,4.25rem)/1 var(--serif);letter-spacing:-.015em;marg
 .contacts .i{color:var(--faint)}
 .contacts a:hover .i{color:var(--accent)}
 .actions{display:flex;flex-wrap:wrap;gap:.6rem}
+.tagline{margin:-.75rem 0 1.25rem;color:var(--muted)}
 .stamp{margin:1rem 0 0;font-size:.85rem;color:var(--muted)}
 .toast{margin:.5rem 0 0;font-size:.875rem;color:var(--accent);min-height:1.3em}
 .toast:empty{display:none}
@@ -77,11 +78,13 @@ h3 a,h4 a{text-decoration:none}
 .entry+.entry{padding-top:1.5rem;border-top:1px solid var(--line)}
 .entry-head,.role-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:.1rem 1.5rem;margin-bottom:.6rem}
 .org{margin:.1rem 0 0;font:italic 400 1.1rem/1.35 var(--serif);color:var(--muted)}
+.detail{margin:.15rem 0 .5rem;font:italic 400 1.05rem/1.4 var(--serif);color:var(--muted)}
+.entry-head+p,.role-head+p{margin-top:0}
 .org a{text-decoration-color:var(--line)}
-.meta{margin:0;font-size:.875rem;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;gap:0 .9rem}
+.meta{margin:0 0 0 -1.2rem;font-size:.875rem;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;clip-path:inset(0 0 0 1.2rem)}
+.meta>span{position:relative;padding-left:1.2rem}
+.meta>span::before{content:"";position:absolute;left:.55rem;top:50%;width:3px;height:3px;margin-top:-1px;border-radius:50%;background:currentColor;opacity:.6}
 .meta .dur:empty,#education .dur{display:none}
-.meta .dur::before,.meta .loc::before{content:"";display:inline-block;width:3px;height:3px;border-radius:50%;background:currentColor;vertical-align:middle;margin-right:.9rem;opacity:.6}
-.meta>span:first-child::before{display:none}
 .entry ul{margin:0;padding:0 0 0 1.15rem;list-style:disc}
 .entry li{margin:.35rem 0;padding-left:.2rem}
 .entry li::marker{color:var(--faint)}
@@ -99,8 +102,10 @@ strong{font-weight:600}
 @media (min-width:40em){.skills>div{grid-template-columns:11rem 1fr;gap:1rem}}
 .skills dt{font-weight:600;font-size:.95rem;padding-top:.2rem}
 .skills dd{margin:0}
-.skills ul{display:flex;flex-wrap:wrap;gap:.4rem;list-style:none;margin:0;padding:0}
-.skills li{padding:.2rem .65rem;border-radius:6px;background:var(--chip);font-size:.9rem}
+.list{margin:0;padding:0 0 0 1.15rem}.list li{margin:.35rem 0}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;list-style:none;margin:0;padding:0}
+.chips li{padding:.2rem .65rem;border-radius:6px;background:var(--chip);font-size:.9rem}
+section>.chips{margin-bottom:1rem}
 
 /* formats */
 .formats>p{color:var(--muted)}
@@ -108,7 +113,7 @@ strong{font-weight:600}
 .fmt a{display:flex;align-items:center;gap:.55rem;min-height:3rem;padding:.6rem .85rem;border:1px solid var(--line);border-radius:10px;background:var(--paper);text-decoration:none;font-weight:500;font-size:.95rem}
 .fmt a:hover{border-color:var(--accent);color:var(--ink)}
 .fmt .i{color:var(--accent)}
-.fmt .ext{margin-left:auto;color:var(--faint);font-size:.8rem;font-variant-numeric:tabular-nums}
+.fmt .ext{margin-left:auto;color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums}
 .pdf{border:1px solid var(--line);border-radius:10px;background:var(--paper)}
 .pdf summary{cursor:pointer;padding:.85rem 1rem;font-weight:500;min-height:2.75rem}
 .pdf-box{padding:0 1rem 1rem}
@@ -123,7 +128,8 @@ strong{font-weight:600}
   @page{size:A4;margin:14mm 14mm 12mm}
   :root{--bg:#fff;--paper:#fff;--ink:#000;--muted:#333;--faint:#555;--rule:#000;--line:#bbb;--chip:#fff;--accent:#000}
   body{font-size:10pt;line-height:1.4;background:#fff;color:#000}
-  .bar,.actions,.formats,.foot,.skip,.toast,.stamp{display:none!important}
+  .bar,.actions,.formats,.foot,.skip,.toast,.tagline{margin:-.75rem 0 1.25rem;color:var(--muted)}
+.stamp{display:none!important}
   .wrap{max-width:none;padding:0}
   .hero{padding:0 0 .8rem}
   h1{font-size:24pt}.job{font-size:13pt;margin:.2rem 0 .5rem}
@@ -134,7 +140,7 @@ strong{font-weight:600}
   .entry{padding-bottom:.6rem}.entry+.entry{padding-top:.6rem}
   .entry li{margin:.15rem 0}.entry li li,.entry ul>li{break-inside:avoid}.role{break-inside:auto}
   #summary>p{font-size:10.5pt;line-height:1.45}.contacts a{min-height:0}.contacts{gap:.1rem 1rem}.entry-head,.role-head{break-after:avoid}
-  .skills li{padding:0;background:none}.skills li:not(:last-child)::after{content:","}
+  .chips li{padding:0;background:none}.chips li:not(:last-child)::after{content:","}
   .skills>div{grid-template-columns:9rem 1fr;gap:.6rem}
   .role::before{display:none}
   a{text-decoration:none}

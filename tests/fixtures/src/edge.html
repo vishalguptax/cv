@@ -1,0 +1,69 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="base.css">
+<style>
+@page { @top-right { content: "Priya Sharma — CV"; font: 8pt Georgia; } @bottom-center { content: "Page " counter(page) " of " counter(pages); font: 8pt Georgia; } }
+.contacts span { margin-right: 22pt; }
+.skills p { padding-left: 70pt; text-indent: -70pt; }
+.dash { margin: 1pt 0 1pt 14pt; }
+li, p { orphans: 1; widows: 1; }
+</style></head><body>
+<h1>Priya Sharma</h1>
+<p class="title">Staff Software Engineer</p>
+<p class="contacts"><span>priya.sharma@example.com</span><span>+44 7700 900123</span><span>London, United Kingdom</span></p>
+<p class="contacts"><span>github.com/priyash</span><span>www.priya.dev</span></p>
+
+<h2>Summary</h2>
+<p><b>Staff engineer</b> building reliable, efficient distributed systems for fintech and logistics teams across Europe. Comfortable with C++ &amp; Rust; I write about &lt;design docs&gt; and costs (~$5 vs ~$9 per run). Notes: 1. not a list; # not a heading; *stars* and _underscores_ stay literal, as do `backticks` and [brackets]. “Smart quotes” and it’s fine; naïve café résumé façade; the office workflow is efficient and fluffy.</p>
+
+<div class="spacer" style="height: 120pt"></div>
+<h2>Work Experience</h2>
+<div class="row"><span><b>Staff Engineer,</b> <i>Acme Corp</i></span><span class="r">Sept 2021 – Current • London, UK</span></div>
+<ul>
+<li>Led the <b>payments platform</b> rewrite in <b>Rust</b>, cutting p99 latency from 480ms to 95ms across 30+ services; see the <a href="https://acme.example/blog/payments">engineering blog post</a>.</li>
+<li>Designed a multi-region <b>Kafka</b> event backbone handling 2.5M events/s with exactly-once delivery, idempotent consumers, replay tooling, schema evolution rules and automated failover drills run every quarter.</li>
+<li>Mentored 12 engineers; 4 promoted to senior. Ran the architecture review board and wrote the org-wide guidelines for on-call, incident reviews and service ownership.</li>
+<li>Introduced contract testing between 40 services, reducing integration incidents by 60% year over year.</li>
+<li>Built the internal developer portal used by 400+ engineers for service scaffolding, docs and ownership data.</li>
+</ul>
+<div class="row"><span><b>Senior Software Engineer</b></span><span class="r">06/2018 – 08/2021</span></div>
+<p><i>Globex Ltd, Manchester</i></p>
+<p>Globex builds logistics software for 300 warehouses in the UK and Ireland.</p>
+<p class="dash">– Owned the routing engine (Go, PostgreSQL); reduced fuel costs by 11% for the largest customer through better batching.</p>
+<p class="dash">– Shipped a real-time tracking API consumed by 5 partner apps, with rate limiting, OAuth 2.0 scopes, versioning and a public changelog.</p>
+<div class="row"><span><b>Globex Ltd</b></span><span></span></div>
+<div class="row"><span><b>Software Engineer</b></span><span class="r">2016 – 2018 | Manchester</span></div>
+<ul><li>Built warehouse scanning tools in TypeScript and React Native.</li></ul>
+<div class="row"><span><b>Graduate Engineer</b></span><span class="r">Sep 2015 – Jun 2016 | Manchester</span></div>
+<ul><li>Rotated through QA, platform and mobile teams.</li></ul>
+<div class="row"><span><b>Contract Developer</b>, Initech — Jan 2015 – Aug 2015 (8 mos)</span><span></span></div>
+<ul><li>Delivered a reporting dashboard for 3 retail clients.</li></ul>
+<div class="row"><span><b>Research Intern,</b> <i>Hooli Labs</i></span><span class="r">May 2014 – Aug 2014 | Remote</span></div>
+<ul>
+<li>Prototyped a log-structured storage engine and benchmarked it against RocksDB and LevelDB on write-heavy workloads, compaction strategies, bloom filter sizing and read amplification under mixed load; wrote up results for the team.</li>
+<li>Presented findings at the internal research day.</li>
+<li>Wrote the benchmark harness that the storage team still uses to compare engines on every release, covering throughput, tail latency, space amplification and recovery time after crashes.</li>
+</ul>
+
+<h2>Projects</h2>
+<div class="row"><span><b><a href="https://github.com/priyash/cvgen">cvgen</a></b> — turns a PDF résumé into a website</span><span class="r">2024</span></div>
+<ul><li>Used by 1,200 people; 900+ stars on GitHub.</li></ul>
+
+<h2>Education</h2>
+<div class="row"><span><b>MSc Computer Science</b></span><span class="r">2013 – 2014 | Leeds, UK</span></div>
+<p><i>University of Leeds</i></p>
+<p><i>Distinction; dissertation on consensus protocols</i></p>
+<div class="row"><span><b>University of Mumbai</b></span><span></span></div>
+<div class="row"><span><b>B.Tech, Information Technology</b></span><span class="r">2009 – 2013</span></div>
+
+<h2>Skills</h2>
+<div class="skills">
+<p><b>Languages:</b> Go, Rust, TypeScript, Python (3.x), C++, Java, Kotlin, SQL, Bash, and a little Haskell for fun on weekends</p>
+<p><b>Cloud</b> AWS (Lambda, ECS, DynamoDB), GCP, Kubernetes, Terraform</p>
+<p><b>Practices:</b> TDD; trunk-based development; SRE · observability</p>
+</div>
+
+<h2>Languages</h2>
+<p>English (Native), Hindi (Fluent), German – Basic</p>
+
+<h2>Certifications</h2>
+<div class="row"><span><b>AWS Solutions Architect – Professional</b>, Amazon Web Services</span><span class="r">Mar 2023</span></div>
+</body></html>

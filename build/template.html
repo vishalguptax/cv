@@ -46,7 +46,7 @@
 <a class="skip" href="#main">Skip to résumé</a>
 <header class="bar">
   <div class="wrap bar-in">
-    <a class="mark" href="#top" aria-label="{{NAME}}, back to top"><span aria-hidden="true">{{INITIALS}}</span></a>
+    <a class="mark" href="#top"><span aria-hidden="true">{{INITIALS}}</span><span class="sr">Back to top</span></a>
     <span class="bar-name" aria-hidden="true">{{NAME}}</span>
     <nav aria-label="Sections"><ul>{{NAV}}</ul></nav>
     <div class="bar-actions">
@@ -60,6 +60,7 @@
   <header class="hero" id="top">
     <h1>{{NAME}}</h1>
     <p class="job">{{JOB}}</p>
+    {{TAGLINE}}
     <ul class="contacts">{{CONTACTS}}</ul>
     <div class="actions">
       <a class="btn" href="/resume.pdf" download="{{PDF_NAME}}">{{I_DOWNLOAD}}<span>Download PDF</span></a>

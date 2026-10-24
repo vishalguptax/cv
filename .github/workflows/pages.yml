@@ -1,4 +1,6 @@
 # Rebuilds and deploys https://cv.vishalg.in whenever the CV PDF (or the builder) changes.
+# The build checks every output against the PDF; if anything is wrong, nothing is deployed
+# and the live site stays as it was.
 # One-time setup: repo Settings → Pages → Source: GitHub Actions.
 name: Build and deploy CV
 
@@ -6,54 +8,80 @@ on:
   push:
     branches: [main]
     paths:
-      - "CV/**.pdf"
+      - "CV/**"
       - "build/**"
+      - "tests/**"
+      - "ruff.toml"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
+env:
+  PANDOC_VERSION: "3.12.1"
+  PANDOC_SHA256: "b4217ac7c54067c442f9d4cd38bcd0c184a43f3e7053431a12263a6f92a33ba2"
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: read # configure-pages reads the site settings
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0 # full history, so "Updated" uses the PDF's commit date
+          fetch-depth: 0 # full history, so "Updated" is the PDF's commit date
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: build/requirements.txt
+          cache-dependency-path: |
+            build/requirements.txt
+            tests/requirements.txt
 
-      - name: Install dependencies
+      - name: Install pandoc ${{ env.PANDOC_VERSION }}
         run: |
-          pip install -r build/requirements.txt
-          sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends pandoc
+          curl -fsSL -o "$RUNNER_TEMP/pandoc.deb" \
+            "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-1-amd64.deb"
+          echo "${PANDOC_SHA256}  $RUNNER_TEMP/pandoc.deb" | sha256sum --check --strict
+          sudo dpkg -i "$RUNNER_TEMP/pandoc.deb"
+          pandoc --version | head -1
 
-      - name: Build site from the PDF
+      - name: Install Python packages
+        run: pip install -r build/requirements.txt -r tests/requirements.txt
+
+      - name: Lint
+        run: ruff check build tests
+
+      - name: Test the builder
+        run: python -m unittest discover -s tests -v
+
+      - name: Build and verify the site from the PDF
         run: python build/build.py --out _site
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: _site
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
