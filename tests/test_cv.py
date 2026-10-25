@@ -189,6 +189,11 @@ class RealCV(unittest.TestCase):
 
     def test_page_links_and_downloads(self):
         page = (self.out / "index.html").read_text()
+        fmt = re.search(r'<ul class="fmt">(.*?)</ul>', page, re.S).group(1)
+        self.assertEqual(re.findall(r'href="([^"]+)"', fmt), ["/resume.pdf", "/resume.docx", "/resume.md",
+                                                             "/resume.txt", "/resume.json", "/vishal-gupta.vcf"])
+        # top bar, under the name, download list, and the "Open the PDF" link in the preview box
+        self.assertEqual(page.count('href="/resume.pdf"'), 4)
         self.assertIn('href="/resume.pdf" download="Vishal_Gupta_Resume.pdf"', page)
         self.assertIn(f'<link rel="canonical" href="{SITE}/">', page)
         self.assertIn(f'<meta property="og:image" content="{SITE}/og.png">', page)
@@ -454,6 +459,10 @@ class VerifierCatchesBreakage(unittest.TestCase):
         p = self.out / "vishal-gupta.vcf"
         p.write_bytes(p.read_bytes().replace(b"\r\n", b"\n"))
         self.assertCaught("vCard")
+
+    def test_duplicate_download_link(self):
+        self.edit("index.html", '<ul class="fmt">', '<ul class="fmt"><li><a href="/resume.pdf">PDF</a></li>')
+        self.assertCaught("download list")
 
     def test_missing_file(self):
         (self.out / "llms.txt").unlink()

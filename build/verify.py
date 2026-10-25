@@ -199,6 +199,11 @@ def verify(doc, layout, cv: dict, out: Path, pandoc: str) -> tuple[list[str], li
             problems.append(f"index.html links to a missing file: {href}")
         elif not re.match(r"^(https?:|mailto:|tel:|#|/)", href):
             problems.append(f"index.html has an unexpected link: {href}")
+    fmt = re.search(r'<ul class="fmt">(.*?)</ul>', page, re.S)
+    listed = re.findall(r'href="/([^"#]+)"', fmt.group(1)) if fmt else []
+    wanted = ["resume.pdf", "resume.docx", "resume.md", "resume.txt", "resume.json", vcf_name(cv)]
+    if listed != wanted:
+        problems.append(f"the download list should offer {wanted} once each, in order; it has {listed}")
     levels = [lvl for lvl, _ in facts.headings]
     for a, b in zip(levels, levels[1:], strict=False):
         if b > a + 1:
