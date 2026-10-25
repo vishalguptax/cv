@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import unittest.mock
 import zipfile
 from pathlib import Path
 
@@ -198,6 +199,16 @@ class RealCV(unittest.TestCase):
         self.assertIn(f'<link rel="canonical" href="{SITE}/">', page)
         self.assertIn(f'<meta property="og:image" content="{SITE}/og.png">', page)
         self.assertIn('<time datetime="2025-11">Nov 2025</time>', page)
+
+    def test_upload_redirect(self):
+        page = (self.out / "upload" / "index.html").read_text()
+        url = build.upload_url()
+        self.assertRegex(url, r"^https://github\.com/[\w.-]+/[\w.-]+/upload/[^/]+/CV$")
+        self.assertIn(f'<meta http-equiv="refresh" content="0; url={url}">', page)
+        self.assertIn(f"location.replace({json.dumps(url)})", page)
+        self.assertIn(f'<a href="{url}">', page)
+        self.assertIn('<meta name="robots" content="noindex">', page)
+        self.assertNotIn("upload", (self.out / "sitemap.xml").read_text())
 
 
 # --------------------------------------------------------------------------
@@ -583,6 +594,34 @@ class FindPdf(unittest.TestCase):
                 build.find_pdf(folder)
             shutil.copyfile(FIX / "minimal.pdf", folder / "CV.PDF")
             self.assertEqual(build.find_pdf(folder).name, "CV.PDF")
+
+
+class UploadUrl(unittest.TestCase):
+    def test_from_actions_environment(self):
+        env = {"GITHUB_REPOSITORY": "someone/my-cv", "GITHUB_REF_NAME": "main",
+               "GITHUB_SERVER_URL": "https://github.com"}
+        with unittest.mock.patch.dict(os.environ, env):
+            self.assertEqual(build.upload_url(), "https://github.com/someone/my-cv/upload/main/CV")
+
+    def test_from_git_remote(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("GITHUB_")}
+        answers = {"remote": "git@github.com:someone/my.cv.git", "rev-parse": "feature/x"}
+        with unittest.mock.patch.dict(os.environ, env, clear=True), \
+                unittest.mock.patch.object(build, "git", lambda *a: answers[a[0]]):
+            self.assertEqual(build.upload_url(), "https://github.com/someone/my.cv/upload/feature/x/CV")
+
+    def test_remote_forms(self):
+        self.assertEqual(build.github_repo("https://github.com/a/b.git"), "a/b")
+        self.assertEqual(build.github_repo("https://github.com/a/b/"), "a/b")
+        self.assertEqual(build.github_repo("ssh://git@github.com/a/b"), "a/b")
+        self.assertIsNone(build.github_repo("https://gitlab.com/a/b.git"))
+        self.assertIsNone(build.github_repo(""))
+
+    def test_no_github_checkout_means_no_page(self):
+        env = {k: v for k, v in os.environ.items() if not k.startswith("GITHUB_")}
+        with unittest.mock.patch.dict(os.environ, env, clear=True), \
+                unittest.mock.patch.object(build, "git", lambda *a: ""):
+            self.assertIsNone(build.upload_url())
 
 
 class Dates2(unittest.TestCase):

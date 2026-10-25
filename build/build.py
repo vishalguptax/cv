@@ -21,6 +21,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from urllib.parse import quote
 
 import pymupdf
 
@@ -70,6 +71,31 @@ def updated_date(path: Path, doc) -> dt.date:
         except ValueError:
             pass
     return dt.date.today()
+
+
+def git(*args: str) -> str:
+    try:
+        return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, timeout=20,
+                              check=False).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def github_repo(remote: str) -> str | None:
+    """owner/repo from a GitHub remote URL (https or ssh)."""
+    m = re.search(r"github\.com[:/]([\w.-]+/[\w.-]+?)(?:\.git)?/?$", remote)
+    return m[1] if m else None
+
+
+def upload_url() -> str | None:
+    """GitHub's upload page for CV/, so /upload can send you there. In Actions it comes from the
+    workflow's environment, locally from the git remote; None outside a GitHub checkout."""
+    repo = os.environ.get("GITHUB_REPOSITORY") or github_repo(git("remote", "get-url", "origin"))
+    branch = os.environ.get("GITHUB_REF_NAME") or git("rev-parse", "--abbrev-ref", "HEAD")
+    if not repo or not branch or branch == "HEAD":
+        return None
+    server = os.environ.get("GITHUB_SERVER_URL", "https://github.com").rstrip("/")
+    return f"{server}/{repo}/upload/{quote(branch, safe='/')}/CV"
 
 
 def find_pandoc() -> str:
@@ -135,6 +161,10 @@ def build(pdf: Path, out: Path, site_url: str, pandoc: str) -> tuple[dict, list[
     (out / "index.html").write_text(render.render_index(cv, site_url, updated, pdf_size=pdf.stat().st_size,
                                                         pages=doc.page_count, formats=formats))
     (out / "404.html").write_text(render.render_404(cv))
+    upload = upload_url()
+    if upload:
+        (out / "upload").mkdir()
+        (out / "upload" / "index.html").write_text(render.render_upload(cv, upload))
     (out / "llms.txt").write_text(render.to_llms(cv, site_url, updated, formats[:5]))
     (out / "sitemap.xml").write_text(render.sitemap(site_url, updated))
     (out / "robots.txt").write_text((BUILD / "robots.txt").read_text().replace("{{SITE}}", site_url))
@@ -144,6 +174,8 @@ def build(pdf: Path, out: Path, site_url: str, pandoc: str) -> tuple[dict, list[
     make_images(doc, layout, out, domain, "Résumé · PDF · Word · Markdown · JSON")
 
     problems, notes = verify(doc, layout, cv, out, pandoc)
+    if not upload:
+        notes.append("not in a GitHub checkout, so /upload (the link to GitHub's upload page) was not made")
     stats = {"pdf": pdf.name, "pages": doc.page_count, "updated": updated.isoformat()}
     return cv, problems, notes, stats
 

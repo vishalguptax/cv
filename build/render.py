@@ -732,3 +732,8 @@ def render_index(cv: dict, site_url: str, updated: dt.date, *, pdf_size: int, pa
 
 def render_404(cv: dict) -> str:
     return (BUILD / "404.html").read_text().replace("{{NAME}}", esc(cv["name"]))
+
+
+def render_upload(cv: dict, upload_url: str) -> str:
+    return (BUILD / "upload.html").read_text().replace("{{NAME}}", esc(cv["name"])) \
+        .replace("{{URL}}", esc(upload_url)).replace("{{URL_JS}}", json.dumps(upload_url))

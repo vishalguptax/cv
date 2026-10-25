@@ -9,7 +9,8 @@ rebuilds the site, checks every output against the PDF, and deploys it. The URLs
 
 1. Replace `CV/Vishal_Gupta_CV_2026.pdf` with the new PDF. Any file name works. If the folder holds
    several PDFs, the most recently committed one is used, so it's cleaner to replace the old one.
-   From the browser: open the `CV` folder → **Add file → Upload files** → commit.
+   From any device: open **[cv.vishalg.in/upload](https://cv.vishalg.in/upload)** (it redirects to
+   GitHub's upload page for `CV/`; sign in if asked), choose the PDF, and commit.
 2. Wait about a minute. A green tick under **Actions** means the new version is live.
 
 If the run fails, nothing was deployed and the old version is still live. GitHub emails you, and
@@ -28,6 +29,7 @@ the run's summary page says exactly what was wrong.
 | [`/vishal-gupta.vcf`](https://cv.vishalg.in/vishal-gupta.vcf) | Contact card |
 | [`/llms.txt`](https://cv.vishalg.in/llms.txt) | Summary and links for AI crawlers |
 | `/robots.txt`, `/sitemap.xml`, `/og.png` | Crawling and link previews |
+| [`/upload`](https://cv.vishalg.in/upload) | Redirects to GitHub's upload page for `CV/` (not indexed; GitHub sign-in still required) |
 
 ## What the build checks before deploying
 
